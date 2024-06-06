@@ -2,13 +2,13 @@
 from typing import List, Tuple
 
 
-def zoom_array(lst: Tuple, factor: int = 2) -> List:
+def zoom_array(lst: Tuple[int, ...], factor: int = 2) -> List[int]:
     '''
     Creates a zoomed-in version of the given
     array by repeating each element
     according to the specified factor.
     '''
-    zoomed_in: List = [
+    zoomed_in: List[int] = [
         item for item in lst
         for i in range(int(factor))
     ]
