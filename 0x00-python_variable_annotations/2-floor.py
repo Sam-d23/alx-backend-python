@@ -8,8 +8,8 @@ returns the floor of the float.
 
 import math
 
-def floor(floor: float) -> int:
+def floor(n: float) -> int:
     """
     Function floor.
     """
-    return math.floor(floor)
+    return math.floor(n)
