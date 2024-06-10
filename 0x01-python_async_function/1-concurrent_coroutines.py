@@ -11,4 +11,6 @@ async def wait_n(n: int, max_delay: int) -> List[float]:
     n times and returns the delay of each spawn
     in ascending order.
     """
-    return sorted(await asyncio.gather(*(wait_random(max_delay) for _ in range(n))))
+    delay = await asyncio.gather(
+            *tuple(map(lamda _: wait_random(max_delay), range(n))))
+    return sorted(delay)
