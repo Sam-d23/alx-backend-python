@@ -71,11 +71,9 @@ class TestAccessNestedMap(unittest.TestCase):
         path (tuple): A tuple of keys representing the path to the target value.
         """
         with self.assertRaises(KeyError) as cm:
-            # Attempt to access a nested value that does not exist
             access_nested_map(nested_map, path)
-        
-        # Ensure the KeyError contains the correct message
-        self.assertEqual(str(cm.exception), str(path[-1]))
+        self.assertEqual(str(cm.exception),
+                         f"Key {path[-1]} not found in path {path}")
 
 
 if __name__ == '__main__':
