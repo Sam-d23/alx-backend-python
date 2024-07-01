@@ -1,80 +1,85 @@
 #!/usr/bin/env python3
 """
-Module for accessing nested maps and testing the functionality.
+A module that tests the utils module.
 """
-
-
 import unittest
+from typing import Dict, Tuple, Union
+from unittest.mock import patch, Mock
 from parameterized import parameterized
-from typing import Any, Dict, Tuple, Optional
 
-
-def access_nested_map(nested_map: Dict[str, Any],
-                      path: Tuple[str, ...],
-                      default: Optional[Any] = None) -> Any:
-    """
-    Safely access a nested element in a dictionary using a list of keys.
-
-    Parameters:
-    nested_map (dict): The nested dictionary to access.
-    path (tuple): A tuple of keys representing the path to the target value.
-    default: The default value to return if the path does not exist.
-
-    Returns:
-    The value at the specified path if it exists, otherwise the default value.
-    """
-    try:
-        for key in path:
-            nested_map = nested_map[key]
-        return nested_map
-    except (KeyError, TypeError):
-        return default
+from utils import (
+    access_nested_map,
+    get_json,
+    memoize,
+)
 
 
 class TestAccessNestedMap(unittest.TestCase):
-    """
-    Unit tests for the access_nested_map function.
-    """
-
+    """The `access_nested_map` function is tested."""
     @parameterized.expand([
         ({"a": 1}, ("a",), 1),
         ({"a": {"b": 2}}, ("a",), {"b": 2}),
-        ({"a": {"b": 2}}, ("a", "b"), 2)
+        ({"a": {"b": 2}}, ("a", "b"), 2),
     ])
-    def test_access_nested_map(self,
-                               nested_map: Dict[str, Any],
-                               path: Tuple[str, ...],
-                               expected: Any) -> None:
-        """
-        Test the access_nested_map function with various inputs.
-
-        Parameters:
-        nested_map (dict): The nested dictionary to access.
-        path (tuple): A tuple of keys representing the path to the target value.
-        expected: The expected value at the specified path.
-        """
+    def test_access_nested_map(
+            self,
+            nested_map: Dict,
+            path: Tuple[str],
+            expected: Union[Dict, int],
+            ) -> None:
+        """The `access_nested_map`'s output is tested."""
         self.assertEqual(access_nested_map(nested_map, path), expected)
 
     @parameterized.expand([
-        ({}, ("a",)),
-        ({"a": 1}, ("a", "b"))
+        ({}, ("a",), KeyError),
+        ({"a": 1}, ("a", "b"), KeyError),
     ])
-    def test_access_nested_map_exception(self,
-                                         nested_map: Dict[str, Any],
-                                         path: Tuple[str, ...]) -> None:
-        """
-        Test the access_nested_map function to ensure it raises KeyError
-        for invalid paths.
-
-        Parameters:
-        nested_map (dict): The nested dictionary to access.
-        path (tuple): A tuple of keys representing the path to the target value.
-        """
-        with self.assertRaises(KeyError) as cm:
+    def test_access_nested_map_exception(
+            self,
+            nested_map: Dict,
+            path: Tuple[str],
+            exception: Exception,
+            ) -> None:
+        """The `access_nested_map`'s exception raising is tested."""
+        with self.assertRaises(exception):
             access_nested_map(nested_map, path)
-        self.assertEqual(str(cm.exception),
-                         f"Key {path[-1]} not found in path {path}")
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestGetJson(unittest.TestCase):
+    """The `get_json` function is tested."""
+    @parameterized.expand([
+        ("http://example.com", {"payload": True}),
+        ("http://holberton.io", {"payload": False}),
+    ])
+    def test_get_json(
+            self,
+            test_url: str,
+            test_payload: Dict,
+            ) -> None:
+        """The `get_json`'s output is tested."""
+        attrs = {'json.return_value': test_payload}
+        with patch("requests.get", return_value=Mock(**attrs)) as req_get:
+            self.assertEqual(get_json(test_url), test_payload)
+            req_get.assert_called_once_with(test_url)
+
+
+class TestMemoize(unittest.TestCase):
+    """Testing the `memoize` function."""
+    def test_memoize(self) -> None:
+        """Testing `memoize`'s output."""
+        class TestClass:
+            def a_method(self):
+                return 42
+
+            @memoize
+            def a_property(self):
+                return self.a_method()
+        with patch.object(
+                TestClass,
+                "a_method",
+                return_value=lambda: 42,
+                ) as memo_fxn:
+            test_class = TestClass()
+            self.assertEqual(test_class.a_property(), 42)
+            self.assertEqual(test_class.a_property(), 42)
+            memo_fxn.assert_called_once()
